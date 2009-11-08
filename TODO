@@ -1,0 +1,45 @@
+There are several things to do to improve this Emacs mode. Unfortunately,
+I'm lacking time, and I rarely use F# these days. I've received a few
+emails related to this project, and even some patches. As it's not yet
+tested/integrated, I just copy here the messages I got.
+
+Feel free to apply the patches, and fix the reported bugs.
+
+
+     Laurent Le Brun.
+
+
+
+
+Vesa Karvonen wrote:
+
+  I'm asking this because there are many annoying bugs in the 0.2 version
+  (e.g. many syntax highlighting issues (e.g. single line comment with
+  quotes inside // ""), indenting a line with a "with" or "else" goes to
+  an infinite loop, ...) and I'm considering fixing some of them, but I
+  wouldn't want to waste my time fixing things that have already been
+  fixed.
+
+
+Jens Horstmeier wrote:
+
+    I ran into problems with spaces in the file name. I was able to solve
+    this problem in my case by replacing the following function
+
+    (defun inferior-fsharp-args-to-list (string)
+      (split-string-and-unquote string))
+
+    in the file init-fsharp.el
+
+    I must admit that I am not an Emacs Lisp expert, so I can just say
+    that it worked for me but maybe it can be some help.
+
+
+Diego Echeverri wrote:
+
+    The C-C C-R command has some problems with things like:
+
+    1 + 1 // Hey I'm sending this to the inf-fsharp!!
+
+    The ;; are appended after the comment. I made this patch that just
+    adds an extra "\n" before of the ";;"
