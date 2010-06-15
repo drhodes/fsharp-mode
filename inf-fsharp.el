@@ -53,6 +53,7 @@ be sent from another buffer in fsharp mode.
   (comint-mode)
   (setq comint-prompt-regexp "^# ?")
   (setq major-mode 'inferior-fsharp-mode)
+
   (setq mode-name "Inferior fsharp")
   (make-local-variable 'paragraph-start)
   (setq paragraph-start (concat "^$\\|" page-delimiter))
@@ -73,7 +74,12 @@ be sent from another buffer in fsharp mode.
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments nil)
   (use-local-map inferior-fsharp-mode-map)
-  (run-hooks 'inferior-fsharp-mode-hooks))
+  (run-hooks 'inferior-fsharp-mode-hooks)
+  ;; use compilation mode to parse errors, but RET and C-cC-c should still be from comint-mode
+  (compilation-minor-mode)
+  (make-local-variable 'minor-mode-map-alist)
+  (setq minor-mode-map-alist (assq-delete-all 'compilation-minor-mode (copy-list minor-mode-map-alist)))
+)
 
 
 (defconst inferior-fsharp-buffer-subname "inferior-fsharp")
@@ -132,19 +138,10 @@ Input and output via buffer `*inferior-fsharp*'."
   (fsharp-run-process-if-needed cmd)
   (switch-to-buffer-other-window inferior-fsharp-buffer-name))
 
-
+;; split the command line (e.g. "mono fsi" -> ("mono" "fsi"))
+;; we double the \ before unquoting, so that the user doesn't have to
 (defun inferior-fsharp-args-to-list (string)
-  (let ((where (string-match "[ \t]" string)))
-    (cond ((null where) (list string))
-          ((not (= where 0))
-           (cons (substring string 0 where)
-                 (inferior-fsharp-args-to-list (substring string (+ 1 where)
-                                                        (length string)))))
-          (t (let ((pos (string-match "[^ \t]" string)))
-               (if (null pos)
-                   nil
-                 (inferior-fsharp-args-to-list (substring string pos
-                                                        (length string)))))))))
+  (split-string-and-unquote (replace-regexp-in-string "\\\\" "\\\\\\\\" string)))
 
 (defun inferior-fsharp-show-subshell ()
   (interactive)
@@ -177,6 +174,12 @@ Input and output via buffer `*inferior-fsharp*'."
   (interactive "r")
   (save-excursion (fsharp-run-process-if-needed))
   (save-excursion
+    ;; send location to fsi
+    (let* (
+          (name (buffer-name (current-buffer)))
+          (line (number-to-string (line-number-at-pos start)))
+          (loc (concat "# " line " \"" name "\"\n")))
+      (comint-send-string inferior-fsharp-buffer-name loc))
     (goto-char end)
 ;    (fsharp-skip-comments-backward)
     (comint-send-region inferior-fsharp-buffer-name start (point))
@@ -184,7 +187,7 @@ Input and output via buffer `*inferior-fsharp*'."
     (if (and (>= (point) 2)
              (prog2 (backward-char 2) (looking-at ";;")))
         (comint-send-string inferior-fsharp-buffer-name "\n")
-      (comint-send-string inferior-fsharp-buffer-name ";;\n"))
+      (comint-send-string inferior-fsharp-buffer-name "\n;;\n"))
     ;; the user may not want to see the output buffer
     (if fsharp-display-when-eval
         (display-buffer inferior-fsharp-buffer-name t))))
@@ -198,10 +201,12 @@ Input and output via buffer `*inferior-fsharp*'."
                 (save-excursion
                   (set-buffer (get-buffer inferior-fsharp-buffer-name))
                   (re-search-backward
-                   (concat comint-prompt-regexp
-                           "[ \t]*Characters[ \t]+\\([0-9]+\\)-[0-9]+:$"))
+                   (concat ;; comint-prompt-regexp
+                           "(\\([0-9]+\\),\\([0-9]+\\)): error"))
+;;                           "[ \t]*Characters[ \t]+\\([0-9]+\\)-[0-9]+:$"))
                   (string-to-int (match-string 1))))))
-    (goto-char loc)))
+    (goto-line (- loc 1))))
+;;    (goto-char loc)))
 
 
 ;;; orgininal inf-fsharp.el ended here

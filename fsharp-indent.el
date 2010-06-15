@@ -11,7 +11,7 @@
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 (defgroup fsharp nil
-  "Support for the Fsharp programming language, <http://www.fsharp.org/>" ;FIXME
+  "Support for the Fsharp programming language, <http://www.fsharp.net/>"
   :group 'languages
   :prefix "fsharp-")
 
@@ -136,9 +136,9 @@ as indentation hints, unless the comment character is in column zero."
   (concat "\\(" (mapconcat 'identity
 			   '("else"
 			     "with"
-                          "finally"
-                          "end"
-                          "done"
+                             "finally"
+                             "end"
+                             "done"
 			     "elif")
 			   "\\|")
 	  "\\)")
@@ -195,9 +195,10 @@ as indentation hints, unless the comment character is in column zero."
 ;; Utilities
 (defmacro fsharp-safe (&rest body)
   "Safely execute BODY, return nil if an error occurred."
-  (` (condition-case nil
-	 (progn (,@ body))
-       (error nil))))
+  `(condition-case nil
+       (progn ,@ body)
+     (error nil)))
+
 
 (defsubst fsharp-keep-region-active ()
   "Keep the region active in XEmacs."
@@ -271,18 +272,22 @@ Optional LIM is ignored."
 (defun fsharp-outdent-p ()
   "Returns non-nil if the current line should dedent one level."
   (save-excursion
-    (and (progn (back-to-indentation)
-		(looking-at fsharp-outdent-re))
-	 ;; short circuit infloop on illegal construct
-	 (not (bobp))
-	 (progn (forward-line -1)
-		(fsharp-goto-initial-line)
-		(back-to-indentation)
-		(while (or (looking-at fsharp-blank-or-comment-re)
-			   (bobp))
-		  (backward-to-indentation 1))
-		(not (looking-at fsharp-no-outdent-re)))
-	 )))
+    (progn (back-to-indentation)
+           (looking-at fsharp-outdent-re))
+))
+
+;;     (and (progn (back-to-indentation)
+;; 		(looking-at fsharp-outdent-re))
+;; 	 ;; short circuit infloop on illegal construct
+;; 	 (not (bobp))
+;; 	 (progn (forward-line -1)
+;; 		(fsharp-goto-initial-line)
+;; 		(back-to-indentation)
+;; 		(while (or (looking-at fsharp-blank-or-comment-re)
+;; 			   (bobp))
+;; 		  (backward-to-indentation 1))
+;; 		(not (looking-at fsharp-no-outdent-re)))
+;; 	 )))
 
 (defun fsharp-electric-colon (arg)
   "Insert a colon.
@@ -764,7 +769,7 @@ You cannot dedent the region if any line is already at column zero."
 	  (error "Region is at left edge"))
       (forward-line 1)))
   (fsharp-shift-region start end (- (prefix-numeric-value
-				 (or count 1))))
+				 (or count fsharp-indent-offset))))
   (fsharp-keep-region-active))
 
 (defun fsharp-shift-region-right (start end &optional count)
@@ -1576,14 +1581,6 @@ This tells add-log.el how to find the current function/method/variable."
       (if (string= scopes "")
 	  nil
 	scopes))))
-
-
-
-(defun fsharp-version ()
-  "Echo the current version of `fsharp-mode' in the minibuffer."
-  (interactive)
-  (message "Using `fsharp-mode' version %s" fsharp-version)
-  (fsharp-keep-region-active))
 
 
 ;;; fsharp-mode.el ends here

@@ -20,8 +20,11 @@
 
 ;;user customizable variables
 
+(defvar fsharp-version 0.3
+  "Version of this fsharp-mode")
+
 (defvar inferior-fsharp-program "fsi.exe"
-  "*Program name for invoking an inferior fsharp from Emacs.")
+  "Program name for invoking an inferior fsharp from Emacs.")
 
 (defvar fsharp-compiler "fsc.exe"
   "Program name for compiling a F# file")
@@ -42,24 +45,15 @@
       (define-key fsharp-mode-map 'backspace 'backward-delete-char-untabify)
     (define-key fsharp-mode-map "\177" 'backward-delete-char-untabify))
 
-  ;; fsharp-types
-  (define-key fsharp-mode-map [?\C-c?\C-t] 'fsharp-types-show-type)
-  ;; must be a mouse-down event. Can be any button and any prefix
-  (define-key fsharp-mode-map [?\C-c down-mouse-1] 'fsharp-types-explore)
-  ;; fsharp-help
-  (define-key fsharp-mode-map [?\C-c?i] 'fsharp-add-path)
-  (define-key fsharp-mode-map [?\C-c?]] 'fsharp-close-module)
-  (define-key fsharp-mode-map [?\C-c?[] 'fsharp-open-module)
-  (define-key fsharp-mode-map [?\C-c?\C-h] 'fsharp-help)
-  (define-key fsharp-mode-map [?\C-c?\t] 'fsharp-complete)
-  ;; others
+  ;; F# bindings
   (define-key fsharp-mode-map "\C-c\C-a" 'fsharp-find-alternate-file)
   (define-key fsharp-mode-map "\C-c\C-c" 'compile)
+  (define-key fsharp-mode-map "\C-cx" 'fsharp-run-executable-file)
+  (define-key fsharp-mode-map "\M-\C-x" 'fsharp-eval-phrase)
   (define-key fsharp-mode-map "\C-c\C-e" 'fsharp-eval-phrase)
   (define-key fsharp-mode-map "\C-c\C-r" 'fsharp-eval-region)
   (define-key fsharp-mode-map "\C-c\C-s" 'fsharp-show-subshell)
   (define-key fsharp-mode-map "\M-\C-h" 'fsharp-mark-phrase)
-  (define-key fsharp-mode-map "\M-\C-x" 'fsharp-eval-phrase)
 
   (define-key fsharp-mode-map "\C-cl" 'fsharp-shift-region-left)
   (define-key fsharp-mode-map "\C-cr" 'fsharp-shift-region-right)
@@ -69,39 +63,30 @@
   (define-key fsharp-mode-map [delete]    'fsharp-electric-delete)
   (define-key fsharp-mode-map [backspace] 'fsharp-electric-backspace)
 
+  (define-key fsharp-mode-map (kbd "C-c <up>") 'fsharp-goto-block-up)
+
 
   (if running-xemacs nil ; if not running xemacs
     (let ((map (make-sparse-keymap "fsharp"))
           (forms (make-sparse-keymap "Forms")))
       (define-key fsharp-mode-map [menu-bar] (make-sparse-keymap))
-      (define-key fsharp-mode-map [menu-bar fsharp] (cons "Caml" map))
-      ;; fsharp-help
+      (define-key fsharp-mode-map [menu-bar fsharp] (cons "F#" map))
 
-      (define-key map [open] '("Open add path" . fsharp-add-path ))
-      (define-key map [close]
-         '("Close module for help" . fsharp-close-module))
-      (define-key map [open] '("Open module for help" . fsharp-open-module))
-      (define-key map [help] '("Help for identifier" . fsharp-help))
-      (define-key map [complete] '("Complete identifier" . fsharp-complete))
-      (define-key map [separator-help] '("---"))
-
-      ;; fsharp-types
-      (define-key map [show-type]
-          '("Show type at point" . fsharp-types-show-type ))
-      (define-key map [separator-types] '("---"))
+      (define-key map [goto-block-up] '("Goto block up" . fsharp-goto-block-up))
+      (define-key map [mark-phrase] '("Mark phrase" . fsharp-mark-phrase))
+      (define-key map [shift-left] '("Shift region to right" . fsharp-shift-region-right))
+      (define-key map [shift-right] '("Shift region to left" . fsharp-shift-region-left))
+      (define-key map [separator-2] '("---"))
 
       ;; others
-      (define-key map [fsharpdebug] '("Call debugger..." . fsharpdebug))
-      (define-key map [run-fsharp] '("Start subshell..." . run-fsharp))
+      (define-key map [run] '("Run..." . fsharp-run-executable-file))
       (define-key map [compile] '("Compile..." . compile))
-      (define-key map [switch-view]
-        '("Switch view" . fsharp-find-alternate-file))
-      (define-key map [separator-format] '("--"))
-      (define-key map [forms] (cons "Forms" forms))
+      (define-key map [switch-view] '("Switch view" . fsharp-find-alternate-file))
+      (define-key map [separator-1] '("--"))
       (define-key map [show-subshell] '("Show subshell" . fsharp-show-subshell))
-      (put 'fsharp-show-subshell 'menu-enable 'fsharp-shell-active)
+      (define-key map [eval-region] '("Eval region" . fsharp-eval-region))
       (define-key map [eval-phrase] '("Eval phrase" . fsharp-eval-phrase))
-      (put 'fsharp-eval-phrase 'menu-enable 'fsharp-shell-active))))
+      )))
 
 (defvar fsharp-mode-syntax-table nil
   "Syntax table in use in fsharp mode buffers.")
@@ -110,13 +95,20 @@
   (setq fsharp-mode-syntax-table (make-syntax-table))
   ; backslash is an escape sequence
   (modify-syntax-entry ?\\ "\\" fsharp-mode-syntax-table)
+
   ; ( is first character of comment start
-  (modify-syntax-entry ?\( "()1" fsharp-mode-syntax-table)
+  (modify-syntax-entry ?\( "()1n" fsharp-mode-syntax-table)
   ; * is second character of comment start,
   ; and first character of comment end
-  (modify-syntax-entry ?*  ". 23" fsharp-mode-syntax-table)
+  (modify-syntax-entry ?*  ". 23n" fsharp-mode-syntax-table)
   ; ) is last character of comment end
-  (modify-syntax-entry ?\) ")(4" fsharp-mode-syntax-table)
+  (modify-syntax-entry ?\) ")(4n" fsharp-mode-syntax-table)
+
+  ; // is the beginning of a comment "b"
+  (modify-syntax-entry ?\/ ". 12b" fsharp-mode-syntax-table)
+  ; // \nis the beginning of a comment "b"
+  (modify-syntax-entry ?\n "> b" fsharp-mode-syntax-table)
+
   ; backquote was a string-like delimiter (for character literals)
   ; (modify-syntax-entry ?` "\"" fsharp-mode-syntax-table)
   ; quote and underscore are part of words
@@ -127,19 +119,6 @@
     (while (< i 256)
       (modify-syntax-entry i "w" fsharp-mode-syntax-table)
       (setq i (1+ i)))))
-
-(defvar fsharp-mode-abbrev-table nil
-  "Abbrev table used for fsharp mode buffers.")
-(if fsharp-mode-abbrev-table nil
-  (setq fsharp-mode-abbrev-table (make-abbrev-table))
-  (define-abbrev fsharp-mode-abbrev-table "and" "and" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "do" "do" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "done" "done" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "else" "else" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "end" "end" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "in" "in" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "then" "then" 'fsharp-abbrev-hook)
-  (define-abbrev fsharp-mode-abbrev-table "with" "with" 'fsharp-abbrev-hook))
 
 ;; Other internal variables
 
@@ -196,10 +175,11 @@
         paragraph-separate      paragraph-start
         paragraph-ignore-fill-prefix t
         require-final-newline   t
+        indent-tabs-mode        nil
         comment-start           "//"
         comment-end             ""
         comment-column          40
-        comment-start-skip      "// *"
+        comment-start-skip      "///* *"
         comment-indent-function 'fsharp-comment-indent-function
         indent-region-function  'fsharp-indent-region
         indent-line-function    'fsharp-indent-line
@@ -291,6 +271,16 @@
   (inferior-fsharp-show-subshell))
 
 
+(defconst fsharp-error-regexp-fs
+  "^\\([^(\n]+\\)(\\([0-9]+\\),\\([0-9]+\\)):"
+  "Regular expression matching the error messages produced by fsc.")
+
+(if (boundp 'compilation-error-regexp-alist)
+    (or (assoc fsharp-error-regexp-fs
+               compilation-error-regexp-alist)
+        (setq compilation-error-regexp-alist
+              (cons (list fsharp-error-regexp-fs 1 2 3)
+               compilation-error-regexp-alist))))
 
 ;; Usual match-string doesn't work properly with font-lock-mode
 ;; on some emacs.
@@ -324,5 +314,11 @@ whole string."
   (let ((name (buffer-file-name)))
     (if (string-match "^\\(.*\\)\\.\\(fs\\|fsi\\)$" name)
         (shell-command (concat (match-string 1 name) ".exe")))))
+
+(defun fsharp-version ()
+  "Echo the current version of `fsharp-mode' in the minibuffer."
+  (interactive)
+  (message "Using `fsharp-mode' version %s" fsharp-version)
+  (fsharp-keep-region-active))
 
 (provide 'fsharp)

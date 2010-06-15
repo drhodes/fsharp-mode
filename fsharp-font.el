@@ -73,33 +73,44 @@
 ;  '("(\\*.*\\*)\\|(\\*.*\n.*\\*)"
 ;    . font-lock-comment-face)
 
-  '("//.*" . font-lock-comment-face)
 
 ;character literals
    (cons (concat "'\\(\\\\\\([ntbr'\\]\\|"
                  "[0-9][0-9][0-9]\\)\\|.\\)'"
                  "\\|\"[^\"\\]*\\(\\\\\\(.\\|\n\\)[^\"\\]*\\)*\"")
          'font-lock-string-face)
+
+  '("//.*" . font-lock-comment-face)
+
 ;modules and constructors
    '("`?\\<[A-Z][A-Za-z0-9_']*\\>" . font-lock-function-name-face)
 ;definition
 
-   (cons (concat
-          "\\<\\(abstract\\|and\\|as\\|class\\|struct"
-          "\\|constructor\\|delegate\\|downcast"
-          "\\|exception"
-          "\\|fun\\|function\\|in\\|inherit\\|inline"
-          "\\|interface\\|let"
-          "\\|member\\|method"
-          "\\|mutable\\|default"
-          "\\|of\\|override\\|property\\|rec"
-          "\\|static\\|type"
-          "\\|upcast\\|val\\|virtual\\|_"
-          "\\|with\\|return\\|yield"
-          "\\|begin\\|end"
-          "\\|do\\|done\\|downto\\|elif\\|else\\|finally\\|for\\|if"
-          "\\|lazy\\|match\\|then\\|to\\|try"
-          "\\|when\\|while\\)\\>")
+   (cons (concat "\\(\\<"
+                 (mapconcat 'identity
+                            '(
+                              ;; F# keywords
+                              "abstract" "and" "as" "assert" "base" "begin"
+                              "class" "default" "delegate" "do" "done" "downcast"
+                              "downto" "elif" "else" "end" "exception" "extern"
+                              "false" "finally" "for" "fun" "function" "global"
+                              "if" "in" "inherit" "inline" "interface" "internal"
+                              "lazy" "let" "match" "member" "module" "mutable"
+                              "namespace" "new" "null" "of" "open" "or" "override"
+                              "private" "public" "rec" "return" "sig" "static"
+                              "struct" "then" "to" "true" "try" "type" "upcast"
+                              "use" "val" "void" "when" "while" "with" "yield"
+
+                              ;; F# reserved words for future use
+                              "atomic" "break" "checked" "component" "const"
+                              "constraint" "constructor" "continue" "eager"
+                              "fixed" "fori" "functor" "include" "measure"
+                              "method" "mixin" "object" "parallel" "params"
+                              "process" "protected" "pure" "recursive" "sealed"
+                              "tailcall" "trait" "virtual" "volatile"
+                              )
+                            "\\>\\|\\<")
+                 "\\>\\)")
          'font-lock-type-face)
 
 ;blocking
