@@ -10,10 +10,8 @@
 When Emacs is started up, it normally runs a file called ~/.emacs located
 in your home directory. This file should contain all of your personal
 customisations written as a series of Elisp commands. In order to install
-the Haskell mode, you have to tell Emacs where to find it. This is done by
+the F# mode, you have to tell Emacs where to find it. This is done by
 adding some commands to the init file.
-
-Copy the "fsharp" directory to your Emacs.
 
 Assuming you have placed the mode in your "~/.emacs.d" directory and you
 now have a "~/.emacs.d/fsharp" directory, copy the following lines to your
@@ -33,7 +31,7 @@ On Windows (adapt the path if needed):
 (setq inferior-fsharp-program "\"c:\\Program Files\\Microsoft F#\\v4.0\\Fsi.exe\"")
 (setq fsharp-compiler "\"c:\\Program Files\\Microsoft F#\\v4.0\\Fsc.exe\"")
 
-On Unix, if (adapt the path if needed):
+On Unix (adapt the path if needed):
 
 (setq inferior-fsharp-program "mono ~/fsi.exe --readline-")
 (setq fsharp-compiler "mono ~/fsc.exe")
@@ -76,7 +74,7 @@ code does an infinite loop or a very long computation.
 If you want to shift the region by 2 spaces, use: M-2 C-c r
 
 In the interactive buffer, use M-RET to send the code without
-explicitely adding the ";;" thing.
+explicitly adding the ";;" thing.
 
 
   4) Contact
