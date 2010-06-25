@@ -18,6 +18,8 @@
 
 ;; modified by Jacques Garrigue, july 1997.
 
+;; modified by Laurent Le Brun for F#, 2010
+
 (require 'comint)
 (require 'fsharp)
 

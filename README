@@ -24,18 +24,19 @@ init file (usually "~/.emacs).
 (autoload 'fsharp-mode "fsharp" "Major mode for editing F# code." t)
 (autoload 'run-fsharp "inf-fsharp" "Run an inferior F# process." t)
 
-To set the path to te compiler and the interactive mode, you
-can add these two following lines.
+If "fsc" and "fsi" are in your path, that's all you need. Otherwise,
+you can add these two following lines to set the path to the compiler
+and interactive F#.
 
 On Windows (adapt the path if needed):
 
 (setq inferior-fsharp-program "\"c:\\Program Files\\Microsoft F#\\v4.0\\Fsi.exe\"")
 (setq fsharp-compiler "\"c:\\Program Files\\Microsoft F#\\v4.0\\Fsc.exe\"")
 
-On Unix (adapt the path if needed):
+On Unix, if (adapt the path if needed):
 
-(setq inferior-fsharp-program "mono fsi.exe --readline-")
-(setq fsharp-compiler "mono fsc.exe --resident")
+(setq inferior-fsharp-program "mono ~/fsi.exe --readline-")
+(setq fsharp-compiler "mono ~/fsc.exe")
 
 
 Reload your init file or reopen Emacs. If you open a ".fs" file, the
@@ -72,6 +73,10 @@ a few useful bindings:
 To interrupt the interactive mode, use "C-c C-c". This is useful if your
 code does an infinite loop or a very long computation.
 
+If you want to shift the region by 2 spaces, use: M-2 C-c r
+
+In the interactive buffer, use M-RET to send the code without
+explicitely adding the ";;" thing.
 
 
   4) Contact
@@ -82,12 +87,12 @@ http://cs.hubfs.net or http://stackoverflow.com
 If you don't have answers, you can send me an email, I will try to reply
 on the thread, as it could be useful to other people.
 
-If you can help improving this mode, feel free to contact me! I can give
-you SVN access on Sourceforge if you'd like to contribute.
+If you can help improving this mode, feel free to contact me! I can
+give you SVN access on Sourceforge if you'd like to contribute. For
+bugs and feature requests, please use Sourceforge tracker.
 
 
 Contact: laurent [at] le-brun.eu
-
 
 -- 
  Laurent.

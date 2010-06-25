@@ -1,5 +1,5 @@
 ;; Indentation rules for F#
-;; Based on fsharp-mode
+;; Based on python-mode
 
 (require 'comint)
 (require 'custom)

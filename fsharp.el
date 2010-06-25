@@ -23,10 +23,10 @@
 (defvar fsharp-version 0.3
   "Version of this fsharp-mode")
 
-(defvar inferior-fsharp-program "fsi.exe"
+(defvar inferior-fsharp-program "fsi"
   "Program name for invoking an inferior fsharp from Emacs.")
 
-(defvar fsharp-compiler "fsc.exe"
+(defvar fsharp-compiler "fsc"
   "Program name for compiling a F# file")
 
 (defvar fsharp-shell-active nil
