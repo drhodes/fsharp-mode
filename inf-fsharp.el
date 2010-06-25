@@ -75,6 +75,9 @@ be sent from another buffer in fsharp mode.
   (setq parse-sexp-ignore-comments nil)
   (use-local-map inferior-fsharp-mode-map)
   (run-hooks 'inferior-fsharp-mode-hooks)
+
+  (define-key inferior-fsharp-mode-map [M-return] 'fsharp-comint-send)
+
   ;; use compilation mode to parse errors, but RET and C-cC-c should still be from comint-mode
   (compilation-minor-mode)
   (make-local-variable 'minor-mode-map-alist)
@@ -355,13 +358,13 @@ should lies."
   (insert-buffer-substring inferior-fsharp-buffer-name
                            fsharp-previous-output (- pos 2))))
 
-;; additional bindings
-  
-;(let ((map (lookup-key fsharp-mode-map [menu-bar fsharp])))
-;  (define-key map [indent-buffer] '("Indent buffer" . fsharp-indent-buffer))
-;  (define-key map [eval-buffer] '("Eval buffer" . fsharp-eval-buffer))
-;) 
-;(define-key fsharp-mode-map "\C-c\C-b" 'fsharp-eval-buffer)
 
+(defun fsharp-simple-send (proc string)
+  (comint-simple-send proc (concat string ";;")))
+
+(defun fsharp-comint-send ()
+  (interactive)
+  (let ((comint-input-sender 'fsharp-simple-send))
+    (comint-send-input)))
 
 (provide 'inf-fsharp)
